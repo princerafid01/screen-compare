@@ -31,9 +31,18 @@ export default {
 
     // console.log(process.env.VUE_APP_GOOGLE_CLIENT_ID);
     // console.log(await this.$gAuth.signIn());
+    const authCode = await this.$gAuth.getAuthCode()
 
-        this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
+        this.$router.push({
+          name : 'home',  
+          params : {
+            // 'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token
+            'access_token' : authCode
+            }
+          });
+
         this.isSignIn = this.$gAuth.isAuthorized;
+        
       } catch (error) {
         //on fail do something
         console.error(error);
@@ -42,12 +51,14 @@ export default {
   },
   mounted() {
     let that = this;
+    const authCode = '';
+    
     let checkGauthLoad = setInterval(() => {
       that.isInit = that.$gAuth.isInit;
       that.isSignIn = that.$gAuth.isAuthorized;
       if (that.isInit) clearInterval(checkGauthLoad);
       if (that.isSignIn) {
-        this.$router.push({name : 'home',  params : {'access_token' : this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token}});
+        this.$router.push({name : 'home',  params : {'access_token' : authCode}});
       }
     }, 1000);
   },
