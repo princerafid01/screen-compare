@@ -114,6 +114,9 @@ import Swal from 'sweetalert2'
         computed: {
             isSignin() {
                 return this.$gAuth.isAuthorized
+            },
+            authCode(){
+                return this.access_token != "" ? this.access_token : localStorage.getItem('authCode');
             }
         },
         watch: {
@@ -124,6 +127,7 @@ import Swal from 'sweetalert2'
         methods: {
             signout() {
                 this.$gAuth.signOut()
+                localStorage.removeItem('authCode')
                 this.$router.push('/')
             },
             fetchFormHeader(){
@@ -131,7 +135,7 @@ import Swal from 'sweetalert2'
                 axios.get(`${this.base_url}/spreadsheets/${this.formData.sheet}/values/Sheet1!A1:C1`,{
                 headers: {
                     'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${this.access_token}`
+                    "Authorization": `Bearer ${this.authCode}`
                 }
                 })
                 .then(({data}) => {
@@ -149,7 +153,7 @@ import Swal from 'sweetalert2'
                 },{
                 headers: {
                     'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${this.access_token}`
+                    "Authorization": `Bearer ${this.authCode}`
                 }
                 })
                 .then(() => {
@@ -170,7 +174,7 @@ import Swal from 'sweetalert2'
                 axios.get(this.sheets_url , {
                     headers: {
                         'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${this.access_token}`
+                        "Authorization": `Bearer ${this.authCode}`
                     }
                 })
                 .then(({data}) => {
@@ -183,6 +187,7 @@ import Swal from 'sweetalert2'
 
                 // if anyone want to add a header
                 if(this.formHeader.col1 && this.formHeader.col2 && this.formHeader.col3){
+                    // Enable this if you want a header
                     await axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
                             valueInputOption: "RAW",
                             data:[
@@ -200,7 +205,7 @@ import Swal from 'sweetalert2'
                     },{
                         headers: {
                             'Content-Type': 'application/json',
-                            "Authorization": `Bearer ${this.access_token}`
+                            "Authorization": `Bearer ${this.authCode}`
                         }
                     });
                 }
@@ -212,7 +217,7 @@ import Swal from 'sweetalert2'
                 },{
                     headers: {
                         'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${this.access_token}`
+                        "Authorization": `Bearer ${this.authCode}`
                     }
                 })
                 .then(() => {

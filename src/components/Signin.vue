@@ -42,6 +42,7 @@ export default {
         this.$gAuth.signIn().then((googleUser) => {
 			this.isSignIn = this.$gAuth.isAuthorized;
         	this.authCode = this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token;
+			localStorage.setItem('authCode', this.authCode)
 
 			if(this.isSignIn){
 				this.$router.push({
