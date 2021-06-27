@@ -51,19 +51,12 @@
         <v-container class="mt-5">
             <v-row class="mt-5">
                 <v-col cols="12" class="mt-5">
-                    <v-text-field class="mt-4" label="Name" v-model="formData.name" hide-details="auto"></v-text-field>
-                    <v-text-field class="mt-4" label="Profession" v-model="formData.profession" hide-details="auto"></v-text-field>
-                    <v-text-field class="mt-4" label="Mobile" v-model="formData.mobile" hide-details="auto"></v-text-field>
+                    <v-text-field class="mt-4" label="A unique Name" v-model="formData.name" hide-details="auto"></v-text-field>
+                    <v-file-input class="mt-4" label="Upload Photo" v-model="formData.image" hide-details="auto"
+                    truncate-length="15"
+                    ></v-file-input>
                     <v-select :items="sheets" item-text="name" item-value="id" class="mt-4" label="Google Sheets" v-model="formData.sheet" @change="fetchFormHeader"></v-select>
 
-                    <v-row v-if="formData.sheet">
-                        <v-col cols="12">
-                            <h3>Add a Header on the sheet</h3>
-                        </v-col>
-                            <v-text-field class=" ml-3" label="Column 1" v-model="formHeader.col1" hide-details="auto"></v-text-field>
-                            <v-text-field class="" label="Column 2"  v-model="formHeader.col2" hide-details="auto"></v-text-field>
-                            <v-text-field class="" label="Column 3"  v-model="formHeader.col3" hide-details="auto"></v-text-field>
-                    </v-row>
 
 
                     <v-btn  color="success" dark class="mt-5" @click="addData">Add Data</v-btn>
@@ -91,9 +84,7 @@ import Swal from 'sweetalert2'
                 newTitle: null,
                 formData: {
                     name : null,
-                    profession : null,
-                    mobile : null,
-                    sheet: null
+                    image: null
                 },
                 formHeader: {
                     col1 : null,
@@ -184,35 +175,52 @@ import Swal from 'sweetalert2'
             },
             async addData(){
                 nprogress.start()
+                console.log(this.formData.image);
 
-                // if anyone want to add a header
-                if(this.formHeader.col1 && this.formHeader.col2 && this.formHeader.col3){
-                    // Enable this if you want a header
-                    await axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values:batchUpdate`,{
-                            valueInputOption: "RAW",
-                            data:[
-                            {
-                                range: "Sheet1!A1",
-                                values: [[this.formHeader.col1]]
-                            }, {
-                                range: "Sheet1!B1",
-                                values: [[this.formHeader.col2]]
-                            }, {
-                                range: "Sheet1!C1",
-                                values: [[this.formHeader.col3]]
-                            },
-                            ]
-                    },{
-                        headers: {
-                            'Content-Type': 'application/json',
-                            "Authorization": `Bearer ${this.authCode}`
-                        }
-                    });
-                }
+                var metadata = {
+                    name: this.formData.image.name,
+                    mimeType: this.formData.image.type,
+                    role: 'reader', type: 'anyone'
+                    //parents: ["folderID"]
+                };
+
+                var permission = {
+                    role: 'reader', type: 'anyone'
+                };
+
+                var formData = new FormData();
+                formData.append( "metadata", new Blob( [JSON.stringify( metadata )], {type: "application/json"} ));
+                formData.append( "file", this.formData.image );
+                formData.append( "role", 'reader' );
+                formData.append( "type", 'anyone' );
+                
+
+                fetch( "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=webViewLink", {
+                    method: "POST",
+                    headers: new Headers({ "Authorization": "Bearer " + this.authCode }),
+                    body: formData,
+                    }).then( function( response ){
+                        console.log(response)
+                    return response.json();
+                    }).then( function( value ){
+                    console.log( value );
+                });
+
+
+                // await axios.post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+                //     // mimeType : "image/jpeg",
+                //     // name: "Workspace",
+                //     body: formData
+                // },{
+                //     headers: {
+                //         'Content-Type': '*/*',
+                //         "Authorization": `Bearer ${this.authCode}`
+                //     }
+                // }).then((response) => console.log(response)).catch((err) => console.log(err));
 
                 await axios.post(`${this.base_url}/spreadsheets/${this.formData.sheet}/values/A1:C1:append?valueInputOption=RAW`,{
                         "values": [
-                            [ this.formData.name, this.formData.profession, this.formData.mobile]
+                            [ this.formData.name, this.formData.image]
                         ]
                 },{
                     headers: {
